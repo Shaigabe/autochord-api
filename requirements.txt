@@ -4,5 +4,8 @@ librosa
 soundfile
 fastapi
 uvicorn
+python-multipart
 autochord
-
+gdown
+lazycats
+tensorflow==2.15.0

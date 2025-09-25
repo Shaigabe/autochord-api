@@ -1,0 +1,17 @@
+numpy==1.26.4
+scipy
+librosa
+soundfile
+fastapi
+uvicorn
+autochordnumpy
+scipy
+librosa
+soundfile
+fastapi
+uvicorn
+autochord
+fastapi
+uvicorn
+autochord
+
