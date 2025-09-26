@@ -1,37 +1,69 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import autochord # Now we import the actual library
 import os
 
 app = FastAPI(title="AutoChord API")
 
-# This is CRUCIAL for allowing your Base44 app to connect
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allows all websites to connect
-    allow_methods=["*"], # Allows all HTTP methods
-    allow_headers=["*"], # Allows all headers
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.post("/")
-async def analyze_audio_mock(file: UploadFile = File(...)):
+async def analyze_audio(file: UploadFile = File(...)):
     """
-    A mock endpoint that returns a fixed response.
-    This helps verify the connection without running the complex autochord library.
+    Analyzes an uploaded audio file using autochord and returns musical features.
     """
     print(f"Received file: {file.filename}, content-type: {file.content_type}")
     
-    # We are not processing the file, just confirming we received it.
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith("audio/"):
+        raise HTTPException(status_code=400, detail="Please upload an audio file (MP3/WAV)")
     
-    return {
-        "chords": [
-            {"start": 0.5, "end": 2.1, "chord": "Am", "confidence": 0.95},
-            {"start": 2.1, "end": 4.0, "chord": "G", "confidence": 0.92}
-        ],
-        "bpm": 125,
-        "key_signature": "A Minor",
-        "musical_style": "Test Response",
-        "analysis_notes": "This is a mock response from the stabilized Railway API. The connection is working!"
-    }
+    # Save uploaded file temporarily
+    temp_path = f"/tmp/{file.filename}"
+    
+    try:
+        # Write file to disk
+        with open(temp_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        
+        # Perform actual audio analysis using autochord
+        chords_data = autochord.recognize(temp_path)
+        
+        # Format the chords data
+        chords = []
+        for start_time, end_time, chord_name in chords_data:
+            chords.append({
+                "start": round(start_time, 2),
+                "end": round(end_time, 2), 
+                "chord": chord_name,
+                "confidence": 1.0 # autochord doesn't provide confidence, so we use 1.0
+            })
+        
+        # For BPM, key_signature, style, we'll use placeholder values for now.
+        # Real implementation would require more libraries (e.g., librosa)
+        # which are already dependencies of autochord, but direct calls aren't exposed.
+        return {
+            "chords": chords,
+            "bpm": 120, # Placeholder
+            "key_signature": "C Major", # Placeholder
+            "musical_style": "Detected", # Placeholder
+            "analysis_notes": "Live analysis from AutoChord service (chords only)."
+        }
+        
+    except Exception as e:
+        # Catch any errors during analysis and return a 500
+        raise HTTPException(status_code=500, detail=f"Analysis failed on server: {str(e)}")
+    
+    finally:
+        # Ensure the temporary file is removed
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
 
 @app.get("/health")
 def health_check():
