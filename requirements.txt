@@ -1,8 +1,7 @@
+numpy==1.26.4
 fastapi
 uvicorn[standard]
 python-multipart
 autochord
 librosa==0.10.1
-# numpy is installed in a separate Dockerfile step due to build order issues,
-# but keeping it here for clarity and for pip's dependency resolution.
-numpy==1.26.4 
+tensorflow==2.10.0  # <--- NEW: Pinning an older, compatible version
