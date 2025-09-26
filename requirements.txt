@@ -1,3 +1,5 @@
 fastapi
 uvicorn[standard]
 python-multipart
+autochord
+librosa==0.10.1 # Pinning a specific version that's known to work well
